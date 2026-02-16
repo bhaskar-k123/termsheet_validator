@@ -2,7 +2,6 @@ Flask>=3.0
 requests>=2.31
 imap-tools>=1.5
 python-dotenv>=1.0
-pymongo>=4.6
 flask-cors>=4.0
 pymupdf>=1.23
 flask-apscheduler>=1.13

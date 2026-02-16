@@ -45,10 +45,9 @@ SHEET_AMORTISED = "amortized_schedule_swap"
 SHEET_CROSS_CURRENCY = "currency_risk_swap"
 
 # ---------------------------------------------------------------------------
-# MongoDB
+# JSON file store (replaces MongoDB)
 # ---------------------------------------------------------------------------
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "mydatabase")
+DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "data"))
 
 # ---------------------------------------------------------------------------
 # External API keys
