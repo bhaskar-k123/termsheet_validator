@@ -1,7 +1,7 @@
-import { SignIn } from '@clerk/clerk-react'
+import { SignIn } from "@/lib/auth";
 import logimg from './assets/loginimg.jpg'
 
-export default function Signin(){
+export default function Signin() {
     return (
         <div className="mx-auto flex min-h-screen w-full items-center justify-center bg-gray-900 text-white"
         // style={{

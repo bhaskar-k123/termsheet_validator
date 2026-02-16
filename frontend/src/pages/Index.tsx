@@ -1,7 +1,7 @@
 import MainLayout from "@/components/layout/MainLayout";
 import StatCard from "@/components/dashboard/StatCard";
 import ProcessingStatus from "@/components/dashboard/ProcessingStatus";
-import { useUser } from "@clerk/clerk-react";
+import { useAuthUser } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import {
   FileText,
@@ -16,7 +16,7 @@ export default function Index() {
   const [totaldocs, setTotalDocs] = useState(0);
   const [validationRate, setValidationRate] = useState(0);
   const [issues, setIssues] = useState(0);
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuthUser();
 
   useEffect(() => {
     if (!isLoaded || !user) return;

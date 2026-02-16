@@ -14,7 +14,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@/lib/auth";
 
 export default function Header() {
   const [searchActive, setSearchActive] = useState(false);
@@ -24,15 +24,15 @@ export default function Header() {
     <header className="h-16 border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm flex items-center px-6 gap-4">
       <div className={cn("flex-1 transition-all", searchActive ? "mr-0" : "mr-auto")}>
         <div className="relative">
-          <Search 
-            size={18} 
+          <Search
+            size={18}
             className={cn(
               "absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-opacity",
               searchActive ? "opacity-100" : "opacity-70"
-            )} 
+            )}
           />
-          <Input 
-            placeholder="Search term sheets, companies, clauses..." 
+          <Input
+            placeholder="Search term sheets, companies, clauses..."
             className={cn(
               "pl-10 transition-all bg-transparent focus-visible:bg-muted/30",
               searchActive ? "w-full" : "w-64 md:w-80 focus:w-96"
@@ -96,8 +96,8 @@ export default function Header() {
 
         <SignedOut>
           <SignInButton className="flex items-center space-x-2 bg-black text-white rounded border-solid hover:bg-green-600 mx-auto p-2 px-4" forceRedirectUrl="/dashboard" />
-          </SignedOut>
-          <SignedIn>
+        </SignedOut>
+        <SignedIn>
           <UserButton className="bg-black text-white rounded p-2" />
         </SignedIn>
 

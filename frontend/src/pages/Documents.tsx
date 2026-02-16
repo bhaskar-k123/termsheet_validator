@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Alldocs from "./Alldocs";
-import { useUser } from "@clerk/clerk-react";
+import { useAuthUser } from "@/lib/auth";
 
 // Mock document for initial state
 const mockSelectedDocument = {
@@ -42,7 +42,7 @@ export default function Documents() {
   const { user } = useUser();
   const userName = user?.fullName || "User";
   const userEmail = user?.emailAddresses[0]?.emailAddress || "";
-  
+
   const handleFileUpload = (files: File[]) => {
     const newDocs = files.map((file, index) => ({
       id: Date.now() + index.toString(),
@@ -55,7 +55,7 @@ export default function Documents() {
       extractedText: "Extracting text...", // Placeholder until AI processes the document
       highlightedTerms: []
     }));
-    
+
     // Simulate AI processing of the document
     setTimeout(() => {
       const processedDocs = newDocs.map(doc => ({
@@ -65,9 +65,9 @@ export default function Documents() {
         highlightedTerms: mockSelectedDocument.highlightedTerms,
         expectedTerms: mockSelectedDocument.expectedTerms
       }));
-      
+
       setDocuments(prev => [...processedDocs, ...prev]);
-      
+
       // Select the first newly uploaded document
       if (processedDocs.length > 0) {
         setSelectedDocument(processedDocs[0]);
@@ -95,68 +95,68 @@ export default function Documents() {
           <TabsTrigger value="upload">Upload Documents</TabsTrigger>
           <TabsTrigger value="view">View Documents</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="upload" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Card className="dashboard-card">
-  <CardHeader className="pb-2">
-    <CardTitle className="text-lg font-semibold">Connect to Mail</CardTitle>
-    <CardDescription>Connect to Gmail to Automate</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <div className="space-y-3">
-      {userEmail !== "" ? (
-        <Button
-          variant="outline"
-          disabled
-          className="w-full flex items-center justify-center gap-2 bg-green-100 text-green-700 cursor-default"
-        >
-          <Mail className="w-5 h-5" />
-          Connected as {userEmail}
-              </Button>
-                ) : (
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 hover:bg-white hover:text-black"
-              >
-                <Mail className="w-5 h-5" />
-                Connect to Gmail
-              </Button>
-            )}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">Connect to Mail</CardTitle>
+                <CardDescription>Connect to Gmail to Automate</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {userEmail !== "" ? (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full flex items-center justify-center gap-2 bg-green-100 text-green-700 cursor-default"
+                    >
+                      <Mail className="w-5 h-5" />
+                      Connected as {userEmail}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full flex items-center justify-center gap-2 hover:bg-white hover:text-black"
+                    >
+                      <Mail className="w-5 h-5" />
+                      Connect to Gmail
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">Connect to Outlook</CardTitle>
+                <CardDescription>Connect to Outlook to Automate</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 hover:bg-white hover:text-black"
+                >
+                  <Mail className="w-5 h-5" />
+                  Connect to Outlook
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
-          <Card className="dashboard-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold">Connect to Outlook</CardTitle>
-              <CardDescription>Connect to Outlook to Automate</CardDescription>
-            </CardHeader>
-            <CardContent>
-            <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 hover:bg-white hover:text-black"
-              >
-                <Mail className="w-5 h-5" />
-                Connect to Outlook
-              </Button>
-            </CardContent>
-          </Card> 
-          </div>
-          
+
           <DocumentUploader onUpload={handleFileUpload} />
-          
+
           {documents.length > 0 && (
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-3">Uploaded Documents</h2>
-              <DocumentList 
-                documents={documents} 
-                onSelectDocument={handleSelectDocument} 
-                selectedDocumentId={selectedDocument?.id} 
+              <DocumentList
+                documents={documents}
+                onSelectDocument={handleSelectDocument}
+                selectedDocumentId={selectedDocument?.id}
               />
             </div>
           )}
         </TabsContent>
-        
+
         <TabsContent value="view">
           <Alldocs />
         </TabsContent>
