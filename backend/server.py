@@ -14,6 +14,7 @@ from flask_apscheduler import APScheduler
 from flask_cors import CORS
 
 from config import (
+    DATA_DIR,
     SCHEDULER_INTERVAL_MINUTES,
     TEXT_FOLDER,
     UPLOAD_FOLDER,
@@ -27,6 +28,7 @@ logger = get_logger(__name__)
 # ---------------------------------------------------------------------------
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEXT_FOLDER, exist_ok=True)
+os.makedirs(DATA_DIR, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # App factory
@@ -76,10 +78,23 @@ def _scheduled_process_pdfs():
 from routes.termsheet_routes import termsheet_bp  # noqa: E402
 from routes.trader_routes import trader_bp  # noqa: E402
 from routes.stats_routes import stats_bp  # noqa: E402
+from extraction_routes import extraction_bp  # noqa: E402
 
 app.register_blueprint(termsheet_bp)
 app.register_blueprint(trader_bp)
 app.register_blueprint(stats_bp)
+app.register_blueprint(extraction_bp)
+
+# ---------------------------------------------------------------------------
+# Health check
+# ---------------------------------------------------------------------------
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Quick health check — always returns 200 if the server is running."""
+    return jsonify({"status": "ok"}), 200
+
 
 # ---------------------------------------------------------------------------
 # Upload routes
