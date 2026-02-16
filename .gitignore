@@ -40,3 +40,4 @@ backend/downloads/
 backend/files/
 backend/texts/
 backend/uploads/*.pdf
+.agent/
