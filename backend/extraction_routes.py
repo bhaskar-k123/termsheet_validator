@@ -13,15 +13,22 @@ import re
 from typing import Any, Dict, List, Tuple
 
 import groq
+from flask import Blueprint, jsonify, request
 from markitdown import MarkItDown
 
-from config import GROQ_API_KEY, get_logger
-from db import db
+from config import GROQ_API_KEY, UPLOAD_FOLDER, get_logger
+from json_store import get_collection
 
 logger = get_logger(__name__)
 
-# Initialize Groq client
-client = groq.Client(api_key=GROQ_API_KEY)
+# Initialize Groq client (only if API key is configured)
+_client = None
+if GROQ_API_KEY:
+    _client = groq.Client(api_key=GROQ_API_KEY)
+
+extraction_bp = Blueprint("extraction_bp", __name__)
+
+termsheet_collection = get_collection("termsheets")
 
 # Define the characteristic parameters for each derivative type
 DERIVATIVE_PARAMETERS: Dict[str, List[str]] = {
@@ -61,8 +68,19 @@ DERIVATIVE_PARAMETERS: Dict[str, List[str]] = {
 }
 
 
+def _get_client() -> groq.Client:
+    """Return the Groq client, raising if not configured."""
+    if _client is None:
+        raise RuntimeError(
+            "Groq API key not configured. Set GROQ_API_KEY in your .env file."
+        )
+    return _client
+
+
 def classify_termsheet(text: str) -> str:
     """Classify a termsheet into one of the six derivative types."""
+    client = _get_client()
+
     classification_prompt = """
     Analyze this financial termsheet and classify it as ONE of the following derivative types:
 
@@ -144,6 +162,8 @@ def _extract_parameters_from_chunk(
     parameters: List[str],
 ) -> Dict[str, Any]:
     """Extract parameters from a single text chunk via LLM."""
+    client = _get_client()
+
     prompt = (
         f"Extract the following parameters from this {derivative_type} termsheet:\n\n"
         f"{', '.join(parameters)}\n\n"
@@ -177,7 +197,7 @@ def _extract_parameters_from_chunk(
 
 
 def process_termsheet(path: str) -> Tuple[str, Dict[str, Any]]:
-    """Full pipeline: convert PDF → classify → extract → store in MongoDB."""
+    """Full pipeline: convert PDF → classify → extract → store."""
     md = MarkItDown(enablePlugins=False)
     termsheet_text = md.convert(path).text_content
     termsheet_text = termsheet_text.replace("\n", " ").replace("\r", " ").strip()
@@ -185,7 +205,6 @@ def process_termsheet(path: str) -> Tuple[str, Dict[str, Any]]:
     derivative_type = classify_termsheet(termsheet_text)
     parameters = extract_parameters_by_chunks(termsheet_text, derivative_type)
 
-    termsheet_collection = db["termsheet"]
     document = {
         "derivative_type": derivative_type,
         **parameters,
@@ -194,9 +213,52 @@ def process_termsheet(path: str) -> Tuple[str, Dict[str, Any]]:
     }
 
     result = termsheet_collection.insert_one(document)
-    if result.acknowledged:
-        logger.info("Document inserted with ID: %s", result.inserted_id)
-    else:
-        logger.error("Failed to insert document for %s", path)
+    logger.info("Document inserted with ID: %s", result.inserted_id)
 
     return derivative_type, parameters
+
+
+# ---------------------------------------------------------------------------
+# API Routes
+# ---------------------------------------------------------------------------
+
+@extraction_bp.route("/extract", methods=["POST"])
+def extract_termsheet():
+    """Extract and classify an uploaded termsheet PDF."""
+    try:
+        file = request.files.get("file")
+        if not file or not file.filename or not file.filename.lower().endswith(".pdf"):
+            return jsonify({"error": "Invalid or no PDF uploaded"}), 400
+
+        save_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(save_path)
+
+        derivative_type, parameters = process_termsheet(save_path)
+
+        return jsonify({
+            "message": "Termsheet processed successfully",
+            "derivative_type": derivative_type,
+            "parameters": parameters,
+        }), 200
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:
+        logger.exception("Error processing termsheet")
+        return jsonify({"error": str(exc)}), 500
+
+
+@extraction_bp.route("/classify", methods=["POST"])
+def classify_only():
+    """Classify a termsheet without full extraction."""
+    try:
+        data = request.get_json()
+        if not data or "text" not in data:
+            return jsonify({"error": "JSON body with 'text' field required"}), 400
+
+        derivative_type = classify_termsheet(data["text"])
+        return jsonify({"derivative_type": derivative_type}), 200
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 503
+    except Exception as exc:
+        logger.exception("Error classifying termsheet")
+        return jsonify({"error": str(exc)}), 500

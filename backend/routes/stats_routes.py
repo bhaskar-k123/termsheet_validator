@@ -5,11 +5,11 @@ Trader statistics routes.
 from flask import Blueprint, jsonify, request
 
 from config import get_logger
-from db import db
+from json_store import get_collection
 
 logger = get_logger(__name__)
 
-termsheet_collection = db["termsheet"]
+termsheet_collection = get_collection("termsheets")
 stats_bp = Blueprint("stats_bp", __name__)
 
 

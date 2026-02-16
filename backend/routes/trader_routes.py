@@ -3,14 +3,13 @@ Trader CRUD routes.
 """
 
 from flask import Blueprint, jsonify, request
-from bson import ObjectId
 
 from config import get_logger
-from db import db
+from json_store import get_collection
 
 logger = get_logger(__name__)
 
-trader_collection = db["traders"]
+trader_collection = get_collection("traders")
 trader_bp = Blueprint("trader_bp", __name__)
 
 
@@ -39,9 +38,7 @@ def create_trader():
 def get_all_traders():
     """Return all traders."""
     try:
-        traders = list(trader_collection.find())
-        for t in traders:
-            t["_id"] = str(t["_id"])
+        traders = trader_collection.find()
         return jsonify(traders), 200
     except Exception as exc:
         logger.exception("Error fetching traders")
@@ -52,10 +49,9 @@ def get_all_traders():
 def get_trader(trader_id):
     """Return a single trader by ID."""
     try:
-        trader = trader_collection.find_one({"_id": ObjectId(trader_id)})
+        trader = trader_collection.find_one({"_id": trader_id})
         if not trader:
             return jsonify({"error": "Trader not found"}), 404
-        trader["_id"] = str(trader["_id"])
         return jsonify(trader), 200
     except Exception as exc:
         logger.exception("Error fetching trader %s", trader_id)
@@ -71,7 +67,7 @@ def update_trader(trader_id):
             return jsonify({"error": "No data provided"}), 400
 
         result = trader_collection.update_one(
-            {"_id": ObjectId(trader_id)},
+            {"_id": trader_id},
             {"$set": data},
         )
         if result.matched_count == 0:
@@ -86,7 +82,7 @@ def update_trader(trader_id):
 def delete_trader(trader_id):
     """Delete a trader by ID."""
     try:
-        result = trader_collection.delete_one({"_id": ObjectId(trader_id)})
+        result = trader_collection.delete_one({"_id": trader_id})
         if result.deleted_count == 0:
             return jsonify({"error": "Trader not found"}), 404
         return jsonify({"message": "Trader deleted successfully!"}), 200

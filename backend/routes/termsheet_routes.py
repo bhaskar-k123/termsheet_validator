@@ -5,12 +5,12 @@ Termsheet CRUD and validation routes.
 from flask import Blueprint, jsonify, request
 
 from config import get_logger
-from db import db
+from json_store import get_collection
 from validators.swap_validator import validate_swap_against_risk_file
 
 logger = get_logger(__name__)
 
-termsheet_collection = db["termsheet"]
+termsheet_collection = get_collection("termsheets")
 termsheet_bp = Blueprint("termsheet_bp", __name__)
 
 
