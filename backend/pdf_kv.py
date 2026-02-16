@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 
 import fitz  # PyMuPDF
 
@@ -34,12 +33,6 @@ class PDFExtractor(BaseVersionedExtractor):
         super().__init__(metadata_dir=METADATA_DIR)
         self.files_dir = FILES_DIR
         os.makedirs(self.files_dir, exist_ok=True)
-        self._clear_metadata()
-
-    def _clear_metadata(self) -> None:
-        if os.path.exists(self.metadata_dir):
-            shutil.rmtree(self.metadata_dir)
-        os.makedirs(self.metadata_dir)
 
     # ------------------------------------------------------------------
     # Public API
