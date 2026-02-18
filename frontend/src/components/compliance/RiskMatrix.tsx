@@ -1,182 +1,53 @@
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { Zap } from "lucide-react";
 
-// Mock data for risk matrix
 const riskItems = [
-  {
-    id: "1",
-    term: "Liquidation Preference",
-    value: "1.5x non-participating",
-    riskLevel: "high",
-    impact: "high",
-    likelihood: "medium",
-    description: "Liquidation preference exceeds standard market terms and may violate SEC Rule 10b-5",
-    mitigation: "Revise to 1x non-participating to align with market standards"
-  },
-  {
-    id: "2",
-    term: "Option Pool",
-    value: "10% post-money",
-    riskLevel: "medium",
-    impact: "medium",
-    likelihood: "medium",
-    description: "Option pool size is below industry standard and may cause future dilution issues",
-    mitigation: "Consider increasing to 15% to align with market standards"
-  },
-  {
-    id: "3",
-    term: "Valuation",
-    value: "$10M pre-money",
-    riskLevel: "low",
-    impact: "medium",
-    likelihood: "low",
-    description: "Valuation is within market range for company stage and metrics",
-    mitigation: "None required"
-  },
-  {
-    id: "4",
-    term: "Protective Provisions",
-    value: "Enhanced investor rights",
-    riskLevel: "medium",
-    impact: "high",
-    likelihood: "low",
-    description: "Enhanced protective provisions may limit operational flexibility",
-    mitigation: "Review provisions against market standards"
-  },
-  {
-    id: "5",
-    term: "Disclosure Schedule",
-    value: "Incomplete",
-    riskLevel: "high",
-    impact: "high",
-    likelihood: "high",
-    description: "Missing critical information in disclosure schedule violates Securities Act Section 12",
-    mitigation: "Complete disclosure schedule with all required information"
-  },
+  { id: "1", term: "Liquidation Pref", value: "1.5x", riskLevel: "high", impact: "high", description: "Standard violation of Rule 10b-5", mitigation: "Align to 1x" },
+  { id: "2", term: "Option Pool", value: "10% Post", riskLevel: "medium", impact: "medium", description: "Sub-market indexing detected", mitigation: "Adjust to 15%" },
+  { id: "3", term: "Valuation Cap", value: "$10M Pre", riskLevel: "low", impact: "low", description: "Vector within market variance", mitigation: "None" },
 ];
 
 export default function RiskMatrix() {
-  const getRiskBadge = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return <Badge className="bg-finance-success text-white">Low</Badge>;
-      case "medium":
-        return <Badge className="bg-finance-warning text-white">Medium</Badge>;
-      case "high":
-        return <Badge className="bg-finance-error text-white">High</Badge>;
-      default:
-        return null;
-    }
-  };
-
-  const getImpactLikelihoodBadge = (level: string) => {
-    switch (level) {
-      case "low":
-        return <span className="text-finance-success font-medium">Low</span>;
-      case "medium":
-        return <span className="text-finance-warning font-medium">Medium</span>;
-      case "high":
-        return <span className="text-finance-error font-medium">High</span>;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Risk Assessment Matrix</CardTitle>
-          <CardDescription>
-            Evaluation of financial terms risks and mitigations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Financial Term</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Risk Level</TableHead>
-                <TableHead className="hidden md:table-cell">Impact</TableHead>
-                <TableHead className="hidden md:table-cell">Likelihood</TableHead>
-                <TableHead className="hidden lg:table-cell">Mitigation</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {riskItems.map((item) => (
-                <TableRow 
-                  key={item.id}
-                  className={cn(
-                    item.riskLevel === "high" ? "bg-finance-error/5 hover:bg-finance-error/10" : 
-                    item.riskLevel === "medium" ? "bg-finance-warning/5 hover:bg-finance-warning/10" : 
-                    "bg-finance-success/5 hover:bg-finance-success/10"
-                  )}
-                >
-                  <TableCell className="font-medium">{item.term}</TableCell>
-                  <TableCell>{item.value}</TableCell>
-                  <TableCell>{getRiskBadge(item.riskLevel)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{getImpactLikelihoodBadge(item.impact)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{getImpactLikelihoodBadge(item.likelihood)}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <span className="text-sm">
-                      {item.riskLevel === "low" ? "None required" : item.mitigation}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Risk Details</CardTitle>
-          <CardDescription>
-            Detailed explanation of identified risks
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {riskItems
-              .filter((item) => item.riskLevel !== "low")
-              .map((item) => (
-                <div 
-                  key={item.id}
-                  className={cn(
-                    "p-4 rounded-md border",
-                    item.riskLevel === "high" ? "bg-finance-error/5 border-finance-error/30" : 
-                    "bg-finance-warning/5 border-finance-warning/30"
-                  )}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <div className="font-semibold">
-                      {item.term}: {item.value}
-                    </div>
-                    {getRiskBadge(item.riskLevel)}
-                  </div>
-                  
-                  <p className="text-sm mb-3">{item.description}</p>
-                  
-                  <div>
-                    <span className="text-sm font-medium">Recommended Mitigation:</span>
-                    <p className="text-sm mt-1">{item.mitigation}</p>
-                  </div>
-                </div>
-              ))}
-              
-            {riskItems.filter((item) => item.riskLevel !== "low").length === 0 && (
-              <div className="text-center py-6 text-muted-foreground">
-                No significant risks identified
-              </div>
-            )}
+    <div className="sleek-card bg-white/[0.01] border border-white/5 hover:border-white/10 transition-all duration-500 overflow-hidden">
+      <div className="p-8 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500">
+            <Zap className="h-6 w-6 text-white/40" />
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col">
+            <h3 className="text-xl font-bold text-white tracking-tight">Vulnerability Matrix</h3>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/20">Risk vector orchestration</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-8 space-y-4">
+        {riskItems.map((item) => (
+          <div key={item.id} className="relative group/item">
+            <div className="relative p-6 rounded-[2rem] border border-white/5 group-hover/item:border-white/10 group-hover/item:bg-white/[0.03] transition-all duration-500 flex items-center justify-between bg-white/[0.01]">
+              <div className="flex items-center gap-6">
+                <div className={cn(
+                  "w-3 h-3 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]",
+                  item.riskLevel === "high" ? "bg-red-500 shadow-red-500/20" : item.riskLevel === "medium" ? "bg-amber-500 shadow-amber-500/20" : "bg-white shadow-white/20"
+                )} />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-white tracking-tight">{item.term}</span>
+                  <span className="text-[10px] font-medium text-white/20 uppercase tracking-widest leading-none">{item.value}</span>
+                </div>
+              </div>
+              <div className={cn(
+                "px-4 py-1.5 rounded-full border text-[9px] font-bold uppercase tracking-widest transition-all",
+                item.riskLevel === "high" ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                  item.riskLevel === "medium" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                    "bg-white/5 text-white/40 border-white/10"
+              )}>
+                {item.riskLevel} Impact
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

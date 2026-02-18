@@ -13,8 +13,8 @@ import re
 from typing import Any, Dict, List, Tuple
 
 import groq
+import fitz  # PyMuPDF
 from flask import Blueprint, jsonify, request
-from markitdown import MarkItDown
 
 from config import GROQ_API_KEY, UPLOAD_FOLDER, get_logger
 from json_store import get_collection
@@ -198,8 +198,9 @@ def _extract_parameters_from_chunk(
 
 def process_termsheet(path: str) -> Tuple[str, Dict[str, Any]]:
     """Full pipeline: convert PDF → classify → extract → store."""
-    md = MarkItDown(enablePlugins=False)
-    termsheet_text = md.convert(path).text_content
+    doc = fitz.open(path)
+    termsheet_text = " ".join(page.get_text() for page in doc)
+    doc.close()
     termsheet_text = termsheet_text.replace("\n", " ").replace("\r", " ").strip()
 
     derivative_type = classify_termsheet(termsheet_text)

@@ -3,9 +3,10 @@ requests>=2.31
 imap-tools>=1.5
 python-dotenv>=1.0
 flask-cors>=4.0
-pymupdf>=1.23
+PyMuPDF>=1.23
 flask-apscheduler>=1.13
-markitdown[all]>=0.1
+
 groq>=0.4
+google-generativeai>=0.3.0
 pandas>=2.1
 openpyxl>=3.1

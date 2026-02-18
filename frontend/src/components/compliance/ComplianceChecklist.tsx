@@ -1,124 +1,29 @@
-
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, AlertTriangle, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2, AlertTriangle, AlertCircle, ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Mock data for compliance checklist
 const complianceItems = [
   {
-    section: "Disclosure Requirements",
+    section: "Disclosure Architecture",
     items: [
-      {
-        id: "1.1",
-        requirement: "Financial Terms Clearly Defined",
-        status: "compliant",
-        details: "All financial terms are clearly defined in section 2.1",
-        riskLevel: "low",
-      },
-      {
-        id: "1.2",
-        requirement: "Valuation Method Disclosure",
-        status: "compliant",
-        details: "Valuation method is properly disclosed",
-        riskLevel: "low",
-      },
-      {
-        id: "1.3",
-        requirement: "Complete Cap Table",
-        status: "warning",
-        details: "Cap table missing post-money calculations",
-        riskLevel: "medium",
-      },
+      { id: "1.1", requirement: "Financial Term Definition", status: "compliant", details: "Terms indexed in registry v2.1", riskLevel: "low" },
+      { id: "1.2", requirement: "Valuation Metrology", status: "compliant", details: "Derived from standard ISO vectors", riskLevel: "low" },
+      { id: "1.3", requirement: "Capital Structure Accuracy", status: "warning", details: "Incomplete post-money calculus detected", riskLevel: "medium" },
     ],
   },
   {
-    section: "Investor Rights",
+    section: "Institutional Entitlements",
     items: [
-      {
-        id: "2.1",
-        requirement: "Pro-rata Rights",
-        status: "compliant",
-        details: "Pro-rata rights properly defined in section 3.2",
-        riskLevel: "low",
-      },
-      {
-        id: "2.2",
-        requirement: "Liquidation Preference",
-        status: "violation",
-        details: "Liquidation preference terms violate current regulations",
-        riskLevel: "high",
-        regulation: "SEC Rule 10b-5",
-      },
-      {
-        id: "2.3",
-        requirement: "Board Representation",
-        status: "compliant",
-        details: "Board representation terms comply with regulations",
-        riskLevel: "low",
-      },
-    ],
-  },
-  {
-    section: "Terms and Conditions",
-    items: [
-      {
-        id: "3.1",
-        requirement: "Vesting Schedule",
-        status: "compliant",
-        details: "Vesting schedule properly defined",
-        riskLevel: "low",
-      },
-      {
-        id: "3.2",
-        requirement: "Non-Dilution Provisions",
-        status: "warning",
-        details: "Non-dilution provisions may need review",
-        riskLevel: "medium",
-      },
-      {
-        id: "3.3",
-        requirement: "Drag-Along Rights",
-        status: "compliant",
-        details: "Drag-along rights comply with regulations",
-        riskLevel: "low",
-      },
-    ],
-  },
-  {
-    section: "Representations and Warranties",
-    items: [
-      {
-        id: "4.1",
-        requirement: "Company Representations",
-        status: "compliant",
-        details: "Company representations are complete",
-        riskLevel: "low",
-      },
-      {
-        id: "4.2",
-        requirement: "Investor Representations",
-        status: "compliant",
-        details: "Investor representations are properly disclosed",
-        riskLevel: "low",
-      },
-      {
-        id: "4.3",
-        requirement: "Disclosure Schedule",
-        status: "violation",
-        details: "Incomplete disclosure schedule",
-        riskLevel: "high",
-        regulation: "Securities Act Section 12",
-      },
+      { id: "2.1", requirement: "Pro-rata Rights Allocation", status: "compliant", details: "Indexed in Section 3.2", riskLevel: "low" },
+      { id: "2.2", requirement: "Liquidation Cascade Protocol", status: "violation", details: "Exceeds regulatory bounds for retail exposure", riskLevel: "high", regulation: "SEC Rule 10b-5" },
     ],
   },
 ];
 
 export default function ComplianceChecklist() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    "Disclosure Requirements": true,
+    "Disclosure Architecture": true,
   });
 
   const toggleSection = (section: string) => {
@@ -128,96 +33,93 @@ export default function ComplianceChecklist() {
     }));
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "compliant":
-        return <CheckCircle2 className="h-5 w-5 text-finance-success" />;
-      case "warning":
-        return <AlertTriangle className="h-5 w-5 text-finance-warning" />;
-      case "violation":
-        return <AlertCircle className="h-5 w-5 text-finance-error" />;
-      default:
-        return null;
-    }
-  };
-
-  const getRiskBadge = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return <Badge variant="outline" className="bg-finance-success/10 text-finance-success border-finance-success/30">Low Risk</Badge>;
-      case "medium":
-        return <Badge variant="outline" className="bg-finance-warning/10 text-finance-warning border-finance-warning/30">Medium Risk</Badge>;
-      case "high":
-        return <Badge variant="outline" className="bg-finance-error/10 text-finance-error border-finance-error/30">High Risk</Badge>;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      {complianceItems.map((section) => (
-        <Card key={section.section}>
-          <div 
+    <div className="space-y-6">
+      {complianceItems.map((section, idx) => (
+        <div key={section.section} className="sleek-card overflow-hidden bg-white/[0.01] border border-white/5 hover:border-white/10 transition-all duration-500">
+          <div
             className={cn(
-              "p-4 cursor-pointer flex items-center justify-between", 
-              expandedSections[section.section] ? "border-b" : ""
+              "p-6 cursor-pointer flex items-center justify-between transition-colors hover:bg-white/[0.03]",
+              expandedSections[section.section] ? "border-b border-white/5" : ""
             )}
             onClick={() => toggleSection(section.section)}
           >
-            <h3 className="text-lg font-semibold flex items-center">
-              {section.section}
-              <span className="ml-2 text-sm text-muted-foreground">
-                ({section.items.filter(item => item.status === "compliant").length}/{section.items.length})
-              </span>
-            </h3>
-            {expandedSections[section.section] ? (
-              <ChevronUp size={18} />
-            ) : (
-              <ChevronDown size={18} />
-            )}
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500">
+                <ShieldCheck className="h-6 w-6 text-white/40" />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-sm font-bold text-white tracking-tight">{section.section}</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+                  {section.items.filter(item => item.status === "compliant").length} / {section.items.length} Points Verified
+                </span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 text-white/20 hover:text-white transition-all">
+              {expandedSections[section.section] ? <p className="rotate-180 transition-transform"><ChevronDown size={18} /></p> : <ChevronDown size={18} />}
+            </div>
           </div>
 
-          {expandedSections[section.section] && (
-            <CardContent className="pt-4">
-              <div className="space-y-4">
-                {section.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "p-4 rounded-md",
-                      item.status === "compliant" ? "bg-finance-success/5 border border-finance-success/20" :
-                      item.status === "warning" ? "bg-finance-warning/5 border border-finance-warning/20" :
-                      "bg-finance-error/5 border border-finance-error/20"
-                    )}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-start space-x-3">
-                        <span className="mt-0.5">{getStatusIcon(item.status)}</span>
-                        <div>
-                          <div className="font-medium">{item.requirement}</div>
-                          <div className="text-sm text-muted-foreground mt-1">{item.details}</div>
-                          {item.regulation && (
-                            <div className="text-sm text-finance-error mt-1">
-                              Violates: {item.regulation}
-                            </div>
-                          )}
+          <AnimatePresence>
+            {expandedSections[section.section] && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+              >
+                <div className="p-6 space-y-4">
+                  {section.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "p-6 rounded-[2rem] border transition-all duration-500",
+                        item.status === "compliant" ? "bg-white/[0.02] border-white/5" :
+                          item.status === "warning" ? "bg-amber-500/5 border-amber-500/10" :
+                            "bg-red-500/5 border-red-500/10"
+                      )}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start gap-5">
+                          <div className="mt-1">
+                            {item.status === "compliant" ? <CheckCircle2 className="h-5 w-5 text-green-500/60" /> :
+                              item.status === "warning" ? <AlertTriangle className="h-5 w-5 text-amber-500/60" /> :
+                                <AlertCircle className="h-5 w-5 text-red-500/60" />}
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-sm font-semibold text-white tracking-tight">{item.requirement}</span>
+                            <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest">{item.details}</span>
+                            {item.regulation && (
+                              <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full text-[9px] font-bold uppercase tracking-widest">
+                                Violation: {item.regulation}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className={cn(
+                          "px-3 py-1 rounded-full border text-[9px] font-bold uppercase tracking-widest",
+                          item.riskLevel === "low" ? "bg-white/5 text-white/40 border-white/10" :
+                            item.riskLevel === "medium" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                              "bg-red-500/10 text-red-500 border-red-500/20"
+                        )}>
+                          {item.riskLevel} Risk
                         </div>
                       </div>
-                      <div>{getRiskBadge(item.riskLevel)}</div>
+
+                      {item.status !== "compliant" && (
+                        <div className="mt-6 flex justify-end">
+                          <button className="px-5 py-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:text-white transition-all font-bold text-[9px] uppercase tracking-widest text-white/60">
+                            Mitigate Vulnerability
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    
-                    {item.status !== "compliant" && (
-                      <div className="mt-4 flex justify-end">
-                        <Button size="sm">Review & Resolve</Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          )}
-        </Card>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       ))}
     </div>
   );

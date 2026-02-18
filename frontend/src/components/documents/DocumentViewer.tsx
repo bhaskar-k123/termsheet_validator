@@ -1,241 +1,151 @@
 import { useState, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-// import {
-//   ZoomIn, 
-//   ZoomOut, 
-//   MoveHorizontal, 
-//   RotateCw, 
-//   Download,
-//   PanelLeftClose,
-//   PanelTopClose,
-//   Maximize
-// } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScannedDocument } from "@/types";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Maximize2,
+  Download,
+  FileText,
+  Eye,
+  GitCompare,
+  ShieldCheck,
+  AlertCircle,
+  Zap
+} from "lucide-react";
 
 interface DocumentViewerProps {
-  document: any;
+  document: ScannedDocument;
 }
 
 export default function DocumentViewer({ document }: DocumentViewerProps) {
-  const [zoom, setZoom] = useState(1);
-  const [splitView, setSplitView] = useState<'horizontal' | 'vertical'>('horizontal');
   const [activeTab, setActiveTab] = useState('document');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + 0.1, 2));
-  };
-
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - 0.1, 0.5));
-  };
-
-  const handleResetZoom = () => {
-    setZoom(1);
-  };
-
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = document.url;
-    link.download = document.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const toggleSplitView = () => {
-    setSplitView(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
-  };
 
   const toggleFullscreen = () => {
     setIsFullscreen(prev => !prev);
   };
 
-  // Function to render highlighted text
-  const renderHighlightedText = () => {
-    if (!document.extractedText || !document.highlightedTerms?.length) {
-      return <p className="whitespace-pre-line">{document.extractedText}</p>;
-    }
-
-    const text = document.extractedText;
-    let lastIndex = 0;
-    const result = [];
-
-    // Sort highlightedTerms by start position
-    const sortedTerms = [...document.highlightedTerms].sort((a, b) => 
-      a.position.start - b.position.start
-    );
-
-    for (const term of sortedTerms) {
-      const { start, end } = term.position;
-      
-      // Add text before the highlight
-      if (start > lastIndex) {
-        result.push(
-          <span key={`text-${lastIndex}`}>
-            {text.substring(lastIndex, start)}
-          </span>
-        );
-      }
-      
-      // Add highlighted text
-      result.push(
-        <span 
-          key={`highlight-${start}`} 
-          className="bg-finance-accent/20 text-finance-highlight px-0.5 rounded"
-          title={`${term.term}: ${term.value}`}
-        >
-          {text.substring(start, end)}
-        </span>
-      );
-      
-      lastIndex = end;
-    }
-    
-    // Add remaining text after last highlight
-    if (lastIndex < text.length) {
-      result.push(
-        <span key={`text-${lastIndex}`}>
-          {text.substring(lastIndex)}
-        </span>
-      );
-    }
-    
-    return <p className="whitespace-pre-line">{result}</p>;
-  };
-
   const renderDocumentContent = () => {
     return (
-      <div className="flex flex-col h-full overflow-x-scroll">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold truncate flex-1">
-            {document.name}
-          </h2>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between mb-8 px-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-white/40" />
+            </div>
+            <div className="flex flex-col">
+              <h2 className="text-lg font-bold text-white tracking-tight truncate max-w-md">
+                {document.name}
+              </h2>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">Asset Repository // {document.id}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all">
+              <Download size={18} />
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="p-3 rounded-2xl bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <Maximize2 size={18} />
+            </button>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList>
-            <TabsTrigger value="document">Document View</TabsTrigger>
-            <TabsTrigger value="comparison">Expected vs. Found</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="document" className="h-full">
-            <div className="bg-muted/20 rounded-md p-2 h-full mt-2 overflow-hidden">
-              {/* {document.url.includes('placeholder.svg') ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <img 
-                    src={document.url} 
-                    alt="Document Preview" 
-                    className="max-w-full max-h-full object-contain"
-                    style={{ transform: `scale(${zoom})` }}
-                  />
-                </div>
-              ) : (
-                <iframe 
-                  src={document.url} 
-                  title={document.name}
-                  className="w-full h-full"
-                  style={{ 
-                    transform: `scale(${zoom})`,
-                    transformOrigin: "top left",
-                    height: "100%",
-                    width: "100%",
-                    border: "none"
-                  }}
-                />
-              )} */}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="comparison" className="h-full">
-            <div 
-              className={cn(
-                "flex h-full gap-4 mt-2",
-                splitView === 'horizontal' ? 'flex-row' : 'flex-col'
-              )}
-            >
-              <div className="flex-1 overflow-auto bg-muted/10 rounded-md p-4">
-                <h3 className="font-medium text-sm mb-2 text-muted-foreground">
-                  Expected Values
-                </h3>
-                <div className="space-y-3 mb-4">
-                  {document.expectedTerms?.map((term: any, index: number) => (
-                    <div 
-                      key={`expected-${index}`}
-                      className="bg-muted/20 rounded p-2 flex justify-between"
-                    >
-                      <span className="font-medium">{term.term}</span>
-                      <span>{term.value}</span>
-                    </div>
-                  ))}
-                  
-                  {(!document.expectedTerms || document.expectedTerms.length === 0) && (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No expected terms defined
-                    </div>
-                  )}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="px-4 mb-6">
+            <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-12 inline-flex">
+              <TabsTrigger value="document" className="rounded-xl data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-[10px] font-bold tracking-widest px-8 transition-all duration-300 gap-2">
+                <Eye size={14} /> PREVIEW
+              </TabsTrigger>
+              <TabsTrigger value="comparison" className="rounded-xl data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-[10px] font-bold tracking-widest px-8 transition-all duration-300 gap-2">
+                <GitCompare size={14} /> ANALYSIS
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <div className="flex-1 min-h-0 px-4">
+            <TabsContent value="document" className="h-[600px] mt-0 focus:outline-none">
+              <div className="w-full h-full bg-black/40 rounded-[2.5rem] border border-white/5 overflow-hidden flex items-center justify-center group relative">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <div className="flex flex-col items-center gap-4 text-white/10 group-hover:text-white/20 transition-colors duration-500">
+                  <FileText size={64} strokeWidth={1} />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.5em]">Protected Preview Layer</span>
                 </div>
               </div>
-              
-              <div className="flex-1 overflow-auto bg-muted/10 rounded-md p-4">
-                <h3 className="font-medium text-sm mb-2 text-muted-foreground">
-                  Obtained Values
-                </h3>
-                <div className="space-y-3 mb-4">
-                  {document.highlightedTerms?.map((term: any, index: number) => (
-                    <div 
-                      key={`found-${index}`}
-                      className="bg-muted/20 rounded p-2 flex justify-between"
-                    >
-                      <span className="font-medium">{term.term}</span>
-                      <span className="text-finance-highlight">{term.value}</span>
-                    </div>
-                  ))}
-                  
-                  {(!document.highlightedTerms || document.highlightedTerms.length === 0) && (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No financial terms found
-                    </div>
-                  )}
+            </TabsContent>
+
+            <TabsContent value="comparison" className="h-[600px] mt-0 focus:outline-none overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 px-2">
+                    <ShieldCheck className="text-white/20" size={18} />
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Expected Parameters</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {document.expectedTerms?.map((term: any, index: number) => (
+                      <div key={index} className="p-6 rounded-[2rem] bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500 flex justify-between items-center group">
+                        <span className="text-sm font-semibold text-white/60 group-hover:text-white transition-colors">{term.term}</span>
+                        <span className="text-[11px] font-bold text-white uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-full border border-white/5">{term.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                
-                <Separator className="my-4" />
-                
-                {/* <h3 className="font-medium text-sm mb-2 text-muted-foreground">
-                  Extracted Text Context
-                </h3>
-                <div className="bg-muted/10 rounded p-3 max-h-96 overflow-y-auto">
-                  {renderHighlightedText()}
-                </div> */}
+
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 px-2">
+                    <Zap className="text-white/20" size={18} />
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Extracted Heuristics</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {document.highlightedTerms?.map((term: any, index: number) => (
+                      <div key={index} className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] transition-all duration-500 flex justify-between items-center group">
+                        <span className="text-sm font-semibold text-white group-hover:text-white transition-colors">{term.term}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[11px] font-bold text-white uppercase tracking-widest bg-white/10 px-4 py-1.5 rounded-full border border-white/10">{term.value}</span>
+                          <AlertCircle size={14} className="text-white/20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     );
   };
 
   return (
-    <Card 
+    <div
       className={cn(
-        "transition-all duration-300",
-        isFullscreen 
-          ? "fixed top-0 left-0 right-0 bottom-0 z-50 h-screen w-screen rounded-none" 
-          : "h-[calc(100vh-120px)]" // Made taller than the original
+        "sleek-card bg-white/[0.01] border border-white/5 p-8 transition-all duration-500",
+        isFullscreen
+          ? "fixed inset-0 z-50 h-screen w-screen rounded-none bg-black/95 backdrop-blur-2xl"
+          : "min-h-[700px]"
       )}
       ref={containerRef}
     >
-      <CardContent className={cn(
-        "p-6 h-full", 
-        isFullscreen ? "max-w-full" : ""
-      )}>
-        {renderDocumentContent()}
-      </CardContent>
-    </Card>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={isFullscreen ? 'full' : 'normal'}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+          className="h-full"
+        >
+          {renderDocumentContent()}
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }

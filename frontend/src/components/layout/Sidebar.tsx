@@ -1,95 +1,101 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { 
-  BarChart2, 
-  FileText, 
-  Home, 
-  Settings, 
-  AlertTriangle, 
-  ChevronLeft, 
-  ChevronRight,
-  Search,
-  FileCheck,
-  Bell,
-  GitGraph
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  FileText,
+  CheckCircle,
+  BarChart3,
+  ShieldCheck,
+  Settings,
+  History,
+  LogOut,
+  ChevronRight
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
-type SidebarItem = {
-  icon: React.ElementType;
-  label: string;
-  path: string;
-};
-
-const sidebarItems: SidebarItem[] = [
-  { icon: Home, label: "Dashboard", path: "/" },
-  { icon: FileText, label: "Documents", path: "/documents" },
-  { icon: FileCheck, label: "Validations", path: "/validations" },
-  { icon: GitGraph, label: "Version", path: "/versions" },
-  // { icon: BarChart2, label: "Analytics", path: "/analytics" },
-  // { icon: AlertTriangle, label: "Compliance", path: "/compliance" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+const sidebarGroups = [
+  {
+    title: "Main",
+    items: [
+      { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
+      { icon: FileText, label: 'Documents', to: '/documents' },
+    ]
+  },
+  {
+    title: "Analysis",
+    items: [
+      { icon: CheckCircle, label: 'Validations', to: '/validations' },
+      { icon: BarChart3, label: 'Analytics', to: '/analytics' },
+      { icon: ShieldCheck, label: 'Compliance', to: '/compliance' },
+    ]
+  },
+  {
+    title: "System",
+    items: [
+      { icon: History, label: 'Versions', to: '/versions' },
+      { icon: Settings, label: 'Settings', to: '/settings' },
+    ]
+  }
 ];
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
-
+export const Sidebar = () => {
   return (
-    <div
-      className={cn(
-        "h-screen fixed left-0 top-0 z-30 flex flex-col bg-sidebar border-r border-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
-      )}
-    >
-      <div className="flex items-center justify-between h-16 px-4">
-        {!collapsed && (
-          <div className="text-xl font-semibold tracking-tight">
-            <span className="text-primary">Sheet</span>Sense
+    <aside className="w-64 h-screen bg-black/40 backdrop-blur-xl border-r border-white/5 hidden md:flex flex-col fixed left-0 top-0 z-40">
+      <div className="p-8">
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="w-10 h-10 bg-gradient-to-br from-white to-gray-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <ShieldCheck className="text-black h-6 w-6" />
           </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </Button>
+          <h1 className="text-xl font-bold tracking-tight text-white">
+            Sheet<span className="text-gray-400">Sense</span>
+          </h1>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4">
-        <TooltipProvider delayDuration={0}>
-          <nav className="px-2 space-y-1">
-            {sidebarItems.map((item) => (
-              <Tooltip key={item.path}>
-                <TooltipTrigger asChild>
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      "flex items-center space-x-3 px-3 py-2.5 rounded-md hover:bg-sidebar-accent group transition-colors",
-                      {
-                        "justify-center": collapsed,
-                      }
-                    )}
-                  >
-                    <item.icon size={20} className="text-muted-foreground group-hover:text-primary" />
-                    {!collapsed && <span className="font-medium">{item.label}</span>}
-                  </Link>
-                </TooltipTrigger>
-                {collapsed && (
-                  <TooltipContent side="right">
-                    {item.label}
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            ))}
-          </nav>
-        </TooltipProvider>
+      <nav className="flex-1 px-4 py-8 space-y-8 overflow-y-auto">
+        {sidebarGroups.map((group) => (
+          <div key={group.title} className="space-y-2">
+            <p className="px-4 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+              {group.title}
+            </p>
+            <div className="space-y-1">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group",
+                      isActive
+                        ? "bg-white/10 text-white shadow-lg border border-white/10"
+                        : "text-white/50 hover:text-white hover:bg-white/5"
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <div className="flex items-center font-medium text-sm">
+                        <item.icon className={cn("mr-3 h-[18px] w-[18px] transition-colors", isActive ? "text-white" : "text-white/40 group-hover:text-white")} />
+                        <span>{item.label}</span>
+                      </div>
+                      {isActive && <motion.div layoutId="activeNav" className="w-1 h-1 bg-white rounded-full" />}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      <div className="p-4 mt-auto border-t border-white/5">
+        <button className="flex items-center w-full px-4 py-3 rounded-2xl text-white/50 hover:bg-red-500/10 hover:text-red-500 transition-all duration-300 font-medium text-sm group">
+          <LogOut className="mr-3 h-[18px] w-[18px] group-hover:rotate-12 transition-transform" />
+          <span>Exit System</span>
+        </button>
       </div>
-    </div>
+    </aside>
   );
-}
+};
+

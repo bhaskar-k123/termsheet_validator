@@ -11,16 +11,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import { ScannedDocument } from "@/types";
+
 interface DocumentListProps {
-  documents: any[];
-  onSelectDocument: (document: any) => void;
+  documents: ScannedDocument[];
+  onSelectDocument: (document: ScannedDocument) => void;
   selectedDocumentId?: string;
 }
 
-export default function DocumentList({ 
-  documents, 
-  onSelectDocument, 
-  selectedDocumentId 
+export default function DocumentList({
+  documents,
+  onSelectDocument,
+  selectedDocumentId
 }: DocumentListProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -68,7 +70,7 @@ export default function DocumentList({
         </TableHeader>
         <TableBody>
           {documents.map((doc) => (
-            <TableRow 
+            <TableRow
               key={doc.id}
               className={cn(
                 selectedDocumentId === doc.id ? "bg-muted/50" : "cursor-pointer hover:bg-muted/30",
@@ -89,12 +91,12 @@ export default function DocumentList({
                   </span>
                 </div>
               </TableCell>
-              <TableCell>{formatFileSize(doc.size)}</TableCell>
+              <TableCell>{formatFileSize(doc.size || 0)}</TableCell>
               <TableCell className="hidden md:table-cell">
-                {doc.type.split("/")[1]?.toUpperCase() || doc.type}
+                {doc.type ? (doc.type.split("/")[1]?.toUpperCase() || doc.type) : "N/A"}
               </TableCell>
               <TableCell className="hidden sm:table-cell text-muted-foreground">
-                {formatDistanceToNow(new Date(doc.uploadDate), { addSuffix: true })}
+                {doc.uploadDate ? formatDistanceToNow(new Date(doc.uploadDate), { addSuffix: true }) : "Unknown"}
               </TableCell>
             </TableRow>
           ))}

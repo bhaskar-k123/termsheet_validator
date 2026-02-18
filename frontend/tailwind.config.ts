@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+import tailwindAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -63,16 +64,15 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Financial theme colors
+				// Premium Financial Palette
 				finance: {
-					success: '#4caf50',
-					warning: '#ff9800',
-					error: '#f44336',
-					info: '#2196f3',
-					highlight: '#64ffda',
-					dark: '#1a1f2c',
-					card: '#252b38',
-					accent: '#0a84ff'
+					navy: '#0f172a',
+					slate: '#334155',
+					blue: '#2563eb',
+					purple: '#7c3aed',
+					success: '#10b981',
+					warning: '#f59e0b',
+					error: '#ef4444',
 				}
 			},
 			borderRadius: {
@@ -82,37 +82,37 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
-				},
-				'pulse-subtle': {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.7' }
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
 				},
 				'fade-in': {
-					'0%': { opacity: '0' },
-					'100%': { opacity: '1' }
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'fade-in-scale': {
+					'0%': { opacity: '0', transform: 'scale(0.95)' },
+					'100%': { opacity: '1', transform: 'scale(1)' }
+				},
+				'slide-in-right': {
+					'0%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-				'fade-in': 'fade-in 0.5s ease-out'
+				'fade-in': 'fade-in 0.4s ease-out',
+				'fade-in-scale': 'fade-in-scale 0.3s ease-out',
+				'slide-in-right': 'slide-in-right 0.3s ease-out'
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'], // Ensure Inter is used
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindAnimate],
 } satisfies Config;

@@ -1,71 +1,98 @@
+import { CheckCircle2, AlertTriangle, AlertCircle, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
+import React from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, AlertTriangle, AlertCircle, Percent } from "lucide-react";
+interface ValidationItem {
+  status: string;
+  confidence: number;
+}
 
 interface ValidationSummaryProps {
-  validations: any[];
+  validations: ValidationItem[];
 }
 
 export default function ValidationSummary({ validations }: ValidationSummaryProps) {
-  // Calculate validation statistics
-  const totalTerms = validations.length;
+  const totalTerms = validations.length || 1;
   const validatedTerms = validations.filter(v => v.status === "validated").length;
   const errorTerms = validations.filter(v => v.status === "error").length;
   const warningTerms = validations.filter(v => v.status === "warning").length;
-  
-  // Calculate average confidence score
-  const averageConfidence = Math.round(
-    validations.reduce((sum, v) => sum + v.confidence, 0) / totalTerms
-  );
 
-  const summaryItems = [
+  const averageConfidence = totalTerms > 0
+    ? Math.round(validations.reduce((sum, v) => sum + v.confidence, 0) / (validations.length || 1))
+    : 0;
+
+  const items = [
     {
-      title: "Validation Rate",
+      title: "Integrity Index",
       value: `${Math.round((validatedTerms / totalTerms) * 100)}%`,
-      icon: <CheckCircle2 className="h-5 w-5 text-finance-success" />,
-      description: `${validatedTerms} of ${totalTerms} terms validated`,
+      icon: <CheckCircle2 size={20} />,
+      description: "Validated compliance",
+      color: "text-green-500",
+      bg: "bg-green-500/10"
     },
     {
-      title: "Error Rate",
+      title: "Critical Drift",
       value: `${Math.round((errorTerms / totalTerms) * 100)}%`,
-      icon: <AlertCircle className="h-5 w-5 text-finance-error" />,
-      description: `${errorTerms} terms with errors`,
+      icon: <AlertCircle size={20} />,
+      description: "Binding violations",
+      color: "text-red-500",
+      bg: "bg-red-500/10"
     },
     {
-      title: "Warning Rate",
+      title: "Anomaly Rate",
       value: `${Math.round((warningTerms / totalTerms) * 100)}%`,
-      icon: <AlertTriangle className="h-5 w-5 text-finance-warning" />,
-      description: `${warningTerms} terms with warnings`,
+      icon: <AlertTriangle size={20} />,
+      description: "Semantic warnings",
+      color: "text-amber-500",
+      bg: "bg-amber-500/10"
     },
     {
-      title: "Confidence Score",
+      title: "Extract Precision",
       value: `${averageConfidence}%`,
-      icon: <Percent className="h-5 w-5 text-finance-info" />,
-      description: "Average confidence level",
-    },
+      icon: <ShieldCheck size={20} />,
+      description: "Heuristic confidence",
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
+    }
   ];
 
   return (
     <>
-      {summaryItems.map((item, index) => (
-        <Card key={index}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="rounded-full bg-card p-3 border border-border">
-                {item.icon}
+      {items.map((item, i) => (
+        <div
+          key={i}
+          className="sleek-card p-8 bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all duration-500 group"
+        >
+          <div className="flex flex-col gap-6">
+            <div className="flex justify-between items-start">
+              <div className={cn(
+                "p-3 rounded-2xl border border-white/5 group-hover:scale-110 group-hover:bg-white/5 transition-all duration-500",
+                "bg-white/[0.02]"
+              )}>
+                {React.cloneElement(item.icon, { className: cn("text-white/40 group-hover:text-white transition-colors") })}
               </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">
-                  {item.title}
-                </div>
-                <div className="text-3xl font-bold">{item.value}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {item.description}
-                </div>
+              <div className={cn(
+                "px-3 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase",
+                item.bg, item.color
+              )}>
+                Live Pulse
               </div>
             </div>
-          </CardContent>
-        </Card>
+
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 group-hover:text-white/40 transition-colors">
+                {item.title}
+              </p>
+              <p className="text-4xl font-bold tracking-tight text-white leading-tight">
+                {item.value}
+              </p>
+            </div>
+
+            <p className="text-[10px] font-medium text-white/10 group-hover:text-white/20 uppercase tracking-[0.15em] border-t border-white/5 pt-4 transition-colors">
+              — {item.description}
+            </p>
+          </div>
+        </div>
       ))}
     </>
   );

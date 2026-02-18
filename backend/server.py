@@ -79,11 +79,13 @@ from routes.termsheet_routes import termsheet_bp  # noqa: E402
 from routes.trader_routes import trader_bp  # noqa: E402
 from routes.stats_routes import stats_bp  # noqa: E402
 from extraction_routes import extraction_bp  # noqa: E402
+from gemini_extractor import gemini_extractor_bp  # noqa: E402
 
 app.register_blueprint(termsheet_bp)
 app.register_blueprint(trader_bp)
 app.register_blueprint(stats_bp)
 app.register_blueprint(extraction_bp)
+app.register_blueprint(gemini_extractor_bp)
 
 # ---------------------------------------------------------------------------
 # Health check

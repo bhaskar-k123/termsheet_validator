@@ -1,6 +1,19 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 // Mock data for the validation trends over time
 const trendData = [
@@ -13,6 +26,64 @@ const trendData = [
   { date: "Aug 12", total: 60, validated: 48, issues: 12 },
 ];
 
+const chartData = {
+  labels: trendData.map((d) => d.date),
+  datasets: [
+    {
+      label: "Total Documents",
+      data: trendData.map((d) => d.total),
+      borderColor: "#0A84FF",
+      backgroundColor: "rgba(10, 132, 255, 0.1)",
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 8,
+      tension: 0.4,
+    },
+    {
+      label: "Validated",
+      data: trendData.map((d) => d.validated),
+      borderColor: "#4caf50",
+      backgroundColor: "rgba(76, 175, 80, 0.1)",
+      borderWidth: 2,
+      pointRadius: 3,
+      tension: 0.4,
+    },
+    {
+      label: "Issues Found",
+      data: trendData.map((d) => d.issues),
+      borderColor: "#f44336",
+      backgroundColor: "rgba(244, 67, 54, 0.1)",
+      borderWidth: 2,
+      pointRadius: 3,
+      tension: 0.4,
+    },
+  ],
+};
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: "top" as const },
+    tooltip: {
+      backgroundColor: "hsl(222.2, 84%, 4.9%)",
+      borderColor: "hsl(217.2, 32.6%, 17.5%)",
+      borderWidth: 1,
+      cornerRadius: 8,
+    },
+  },
+  scales: {
+    x: {
+      grid: { color: "rgba(255,255,255,0.06)" },
+      ticks: { color: "hsl(215, 20.2%, 65.1%)" },
+    },
+    y: {
+      grid: { color: "rgba(255,255,255,0.06)" },
+      ticks: { color: "hsl(215, 20.2%, 65.1%)" },
+    },
+  },
+};
+
 export default function ValidationTrends() {
   return (
     <Card className="dashboard-card">
@@ -22,55 +93,7 @@ export default function ValidationTrends() {
       </CardHeader>
       <CardContent>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={trendData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" opacity={0.3} />
-              <XAxis 
-                dataKey="date" 
-                stroke="hsl(var(--muted-foreground))" 
-                fontSize={12} 
-                tickLine={false} 
-              />
-              <YAxis 
-                stroke="hsl(var(--muted-foreground))" 
-                fontSize={12} 
-                tickLine={false} 
-                axisLine={false} 
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '0.5rem',
-                }} 
-              />
-              <Line
-                type="monotone"
-                dataKey="total"
-                stroke="#0A84FF"
-                activeDot={{ r: 8 }}
-                strokeWidth={2}
-                name="Total Documents"
-              />
-              <Line
-                type="monotone"
-                dataKey="validated"
-                stroke="#4caf50"
-                strokeWidth={2}
-                name="Validated"
-              />
-              <Line
-                type="monotone"
-                dataKey="issues"
-                stroke="#f44336"
-                strokeWidth={2}
-                name="Issues Found"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <Line data={chartData} options={chartOptions} />
         </div>
       </CardContent>
     </Card>
