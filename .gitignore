@@ -41,3 +41,5 @@ backend/files/
 backend/texts/
 backend/uploads/*.pdf
 .agent/
+*.tsbuildinfo
+lint_output.txt

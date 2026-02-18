@@ -53,6 +53,7 @@ DATA_DIR = os.getenv("DATA_DIR", str(BASE_DIR / "data"))
 # External API keys
 # ---------------------------------------------------------------------------
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # ---------------------------------------------------------------------------
 # Email (IMAP)
