@@ -1,62 +1,44 @@
-
 import { useState } from "react";
-import MainLayout from "@/components/layout/MainLayout";
 import DocumentUploader from "@/components/documents/DocumentUploader";
-import DocumentList from "@/components/documents/DocumentList";
-import DocumentViewer from "@/components/documents/DocumentViewer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Mail, FileIcon, ShieldCheck, Zap } from "lucide-react";
 import Alldocs from "./Alldocs";
-import { useAuthUser } from "@/lib/auth";
+import { useAuthUser } from "@/lib/auth-hooks";
+import { ScannedDocument } from "@/types";
+import { motion, AnimatePresence } from "framer-motion";
+import DocumentList from "@/components/documents/DocumentList";
 
 // Mock document for initial state
-const mockSelectedDocument = {
+const mockSelectedDocument: ScannedDocument = {
   id: "1",
   name: "Sample Term Sheet.pdf",
   uploadDate: "2023-08-15T10:30:00Z",
   status: "validated",
-  extractedText: "This Term Sheet outlines the principal terms and conditions of the proposed financing...\n\nValuation: $10M pre-money\nAmount: $2M\nPrice per share: $1.25\nInvestors: VC Fund A, Angel Group B\n\nLiquidation Preference: 1x non-participating\nBoard Seats: 1 investor representative\nVesting: 4 years with 1 year cliff\n\nPro-rata rights: Yes\nDrag-along: Yes\nRegistration rights: Yes",
-  highlightedTerms: [
-    { term: "Valuation", value: "$10M pre-money", position: { start: 108, end: 123 } },
-    { term: "Amount", value: "$2M", position: { start: 131, end: 134 } },
-    { term: "Price per share", value: "$1.25", position: { start: 150, end: 155 } },
-    { term: "Liquidation Preference", value: "1x non-participating", position: { start: 199, end: 217 } },
-    { term: "Vesting", value: "4 years with 1 year cliff", position: { start: 264, end: 287 } }
-  ],
-  expectedTerms: [
-    { term: "Valuation", value: "$10M pre-money" },
-    { term: "Amount", value: "$2.5M" }, // Intentionally different to show comparison
-    { term: "Price per share", value: "$1.25" },
-    { term: "Liquidation Preference", value: "1x non-participating" },
-    { term: "Vesting", value: "4 years with 1 year cliff" },
-    { term: "Board Seats", value: "2 investor representatives" } // Term that wasn't found but was expected
-  ]
+  extractedText: "This Term Sheet outlines the principal terms and conditions...",
+  highlightedTerms: [],
+  expectedTerms: []
 };
 
 export default function Documents() {
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [selectedDocument, setSelectedDocument] = useState<any | null>(null);
+  const [documents, setDocuments] = useState<ScannedDocument[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<ScannedDocument | null>(null);
   const [activeTab, setActiveTab] = useState("upload");
-  const { user } = useUser();
-  const userName = user?.fullName || "User";
+  const { user } = useAuthUser();
   const userEmail = user?.emailAddresses[0]?.emailAddress || "";
 
   const handleFileUpload = (files: File[]) => {
-    const newDocs = files.map((file, index) => ({
-      id: Date.now() + index.toString(),
+    const newDocs: ScannedDocument[] = files.map((file, index) => ({
+      id: (Date.now() + index).toString(),
       name: file.name,
       uploadDate: new Date().toISOString(),
       status: "processing",
       size: file.size,
       type: file.type,
       url: URL.createObjectURL(file),
-      extractedText: "Extracting text...", // Placeholder until AI processes the document
+      extractedText: "Extracting text...",
       highlightedTerms: []
     }));
 
-    // Simulate AI processing of the document
     setTimeout(() => {
       const processedDocs = newDocs.map(doc => ({
         ...doc,
@@ -68,7 +50,6 @@ export default function Documents() {
 
       setDocuments(prev => [...processedDocs, ...prev]);
 
-      // Select the first newly uploaded document
       if (processedDocs.length > 0) {
         setSelectedDocument(processedDocs[0]);
         setActiveTab("view");
@@ -76,91 +57,125 @@ export default function Documents() {
     }, 2000);
   };
 
-  const handleSelectDocument = (doc: any) => {
+  const handleSelectDocument = (doc: ScannedDocument) => {
     setSelectedDocument(doc);
     setActiveTab("view");
   };
 
   return (
-    <MainLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Document Management</h1>
-        <p className="text-muted-foreground">
-          Upload, view, and analyze term sheet documents
-        </p>
+    <div className="space-y-16">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 px-4">
+        <div className="space-y-4">
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight"
+          >
+            Internal <span className="text-white/40">Registry</span>
+          </motion.h1>
+          <p className="text-lg text-white/40 font-medium max-w-2xl">
+            Centralized document processing and heuristic audit infrastructure.
+          </p>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="upload">Upload Documents</TabsTrigger>
-          <TabsTrigger value="view">View Documents</TabsTrigger>
-        </TabsList>
+        <div className="px-4 mb-12">
+          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-2xl h-14 inline-flex">
+            <TabsTrigger
+              value="upload"
+              className="rounded-xl px-10 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-[10px] font-bold tracking-[0.2em] transition-all duration-300"
+            >
+              INGESTION PIPELINE
+            </TabsTrigger>
+            <TabsTrigger
+              value="view"
+              className="rounded-xl px-10 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-lg text-[10px] font-bold tracking-[0.2em] transition-all duration-300"
+            >
+              CORE REPOSITORY
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="upload" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <Card className="dashboard-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold">Connect to Mail</CardTitle>
-                <CardDescription>Connect to Gmail to Automate</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {userEmail !== "" ? (
-                    <Button
-                      variant="outline"
-                      disabled
-                      className="w-full flex items-center justify-center gap-2 bg-green-100 text-green-700 cursor-default"
-                    >
-                      <Mail className="w-5 h-5" />
-                      Connected as {userEmail}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      className="w-full flex items-center justify-center gap-2 hover:bg-white hover:text-black"
-                    >
-                      <Mail className="w-5 h-5" />
-                      Connect to Gmail
-                    </Button>
-                  )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <TabsContent value="upload" className="space-y-12 outline-none p-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="sleek-card p-10 bg-white/[0.01] border border-white/5 flex flex-col group hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500">
+                  <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500 mb-8">
+                    <Mail className="h-7 w-7 text-white/40 group-hover:text-white transition-colors" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Gmail Integration</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-10">Automated capture from communication layers</p>
+
+                  <div className="mt-auto">
+                    {userEmail !== "" ? (
+                      <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/5 border border-white/10">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 truncate">{userEmail}</span>
+                      </div>
+                    ) : (
+                      <button className="w-full py-4 rounded-2xl bg-white text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-all">
+                        AUTHORIZE ACCESS
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-            <Card className="dashboard-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold">Connect to Outlook</CardTitle>
-                <CardDescription>Connect to Outlook to Automate</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-2 hover:bg-white hover:text-black"
-                >
-                  <Mail className="w-5 h-5" />
-                  Connect to Outlook
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
 
-          <DocumentUploader onUpload={handleFileUpload} />
+                <div className="sleek-card p-10 bg-white/[0.01] border border-white/5 flex flex-col group hover:bg-white/[0.03] hover:border-white/10 transition-all duration-500">
+                  <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500 mb-8">
+                    <ShieldCheck className="h-7 w-7 text-white/40 group-hover:text-white transition-colors" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight mb-2">Enterprise Sync</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-10">Internal infrastructure synchronization</p>
 
-          {documents.length > 0 && (
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold mb-3">Uploaded Documents</h2>
-              <DocumentList
-                documents={documents}
-                onSelectDocument={handleSelectDocument}
-                selectedDocumentId={selectedDocument?.id}
-              />
-            </div>
-          )}
-        </TabsContent>
+                  <div className="mt-auto">
+                    <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 font-bold text-xs uppercase tracking-widest transition-all">
+                      SYNC REPOSITORY
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-        <TabsContent value="view">
-          <Alldocs />
-        </TabsContent>
+              <div className="sleek-card bg-white/[0.01] border border-white/5 p-12 overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <DocumentUploader onUpload={handleFileUpload} />
+              </div>
+
+              {documents.length > 0 && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-bold text-white tracking-tight">Active Pipeline</h2>
+                    <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">{documents.length} Artifacts</span>
+                    </div>
+                  </div>
+                  <div className="sleek-card bg-white/[0.01] border border-white/5 overflow-hidden">
+                    <DocumentList
+                      documents={documents}
+                      onSelectDocument={handleSelectDocument}
+                      selectedDocumentId={selectedDocument?.id}
+                    />
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="view" className="outline-none p-4">
+              <div className="sleek-card bg-white/[0.01] border border-white/5 p-12 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <Alldocs />
+              </div>
+            </TabsContent>
+          </motion.div>
+        </AnimatePresence>
       </Tabs>
-    </MainLayout>
+    </div>
   );
 }

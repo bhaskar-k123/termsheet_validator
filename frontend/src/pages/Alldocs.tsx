@@ -1,246 +1,190 @@
-
 import DocumentViewer from "@/components/documents/DocumentViewer";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import {
+  Search,
+  Filter,
+  ChevronRight,
+  FileText,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ExternalLink,
+  ArrowUpDown,
+  RefreshCw
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
-  const mockDocuments = [
-    {
-      id: "1",
-      name: "Sample Term Sheet.pdf",
-      uploadDate: "2023-08-15T10:30:00Z",
-      status: "validated",
-      extractedText: "This Term Sheet outlines the principal terms and conditions of the proposed financing...\n\nValuation: $10M pre-money\nAmount: $2M\nPrice per share: $1.25\nInvestors: VC Fund A, Angel Group B\n\nLiquidation Preference: 1x non-participating\nBoard Seats: 1 investor representative\nVesting: 4 years with 1 year cliff\n\nPro-rata rights: Yes\nDrag-along: Yes\nRegistration rights: Yes",
-      highlightedTerms: [
-        { term: "Valuation", value: "$10M pre-money", position: { start: 108, end: 123 } },
-        { term: "Amount", value: "$2M", position: { start: 131, end: 134 } },
-        { term: "Price per share", value: "$1.25", position: { start: 150, end: 155 } },
-        { term: "Liquidation Preference", value: "1x non-participating", position: { start: 199, end: 217 } },
-        { term: "Vesting", value: "4 years with 1 year cliff", position: { start: 264, end: 287 } }
-      ],
-      expectedTerms: [
-        { term: "Valuation", value: "$10M pre-money" },
-        { term: "Amount", value: "$2.5M" }, // Intentionally different to show comparison
-        { term: "Price per share", value: "$1.25" },
-        { term: "Liquidation Preference", value: "1x non-participating" },
-        { term: "Vesting", value: "4 years with 1 year cliff" },
-        { term: "Board Seats", value: "2 investor representatives" } // Term that wasn't found but was expected
-      ]
-    },
-    {
-      id: "2",
-      name: "Investment Agreement.pdf",
-      uploadDate: "2023-09-10T14:45:00Z",
-      status: "processing",
-      extractedText: "INVESTMENT AGREEMENT\nDate: September 5, 2023\n\nThis Investment Agreement (the \"Agreement\") sets forth the terms of investment...\n\nInvestment Amount: $5M\nShare Class: Series A Preferred\nValuation Cap: $25M\nDiscount Rate: 20%\n\nConversion: Automatic conversion upon qualified financing\nInformation Rights: Quarterly financial statements\nMost Favored Nation: Yes\n\nGoverning Law: Delaware",
-      highlightedTerms: [
-        { term: "Investment Amount", value: "$5M", position: { start: 150, end: 153 } },
-        { term: "Share Class", value: "Series A Preferred", position: { start: 166, end: 183 } },
-        { term: "Valuation Cap", value: "$25M", position: { start: 196, end: 200 } },
-        { term: "Discount Rate", value: "20%", position: { start: 214, end: 217 } }
-      ],
-      expectedTerms: [
-        { term: "Investment Amount", value: "$5M" },
-        { term: "Share Class", value: "Series A Preferred" },
-        { term: "Valuation Cap", value: "$25M" },
-        { term: "Discount Rate", value: "20%" },
-        { term: "Most Favored Nation", value: "Yes" },
-        { term: "Pro-rata Rights", value: "Yes" } // Term that wasn't found but was expected
-      ]
-    },
-    {
-      id: "3",
-      name: "Seed Round Term Sheet.docx",
-      uploadDate: "2023-10-05T09:15:00Z",
-      status: "validated",
-      extractedText: "SEED ROUND TERM SHEET\n\nCompany: TechStart Inc.\nInvestors: Seed Capital Fund, Angel Consortium\n\nFinancing Amount: $1.5M\nPre-Money Valuation: $6M\nPost-Money Valuation: $7.5M\nPrice Per Share: $0.75\n\nOption Pool: 15% post-financing\nLiquidation Preference: 1x non-participating\nAnti-dilution: Broad-based weighted average\nDividend: 6% non-cumulative\n\nVoting Rights: As converted basis\nBoard Composition: 2 founders, 1 investor, 1 independent",
-      highlightedTerms: [
-        { term: "Financing Amount", value: "$1.5M", position: { start: 105, end: 110 } },
-        { term: "Pre-Money Valuation", value: "$6M", position: { start: 130, end: 133 } },
-        { term: "Post-Money Valuation", value: "$7.5M", position: { start: 157, end: 162 } },
-        { term: "Price Per Share", value: "$0.75", position: { start: 180, end: 185 } },
-        { term: "Option Pool", value: "15% post-financing", position: { start: 198, end: 216 } },
-        { term: "Anti-dilution", value: "Broad-based weighted average", position: { start: 260, end: 288 } }
-      ],
-      expectedTerms: [
-        { term: "Financing Amount", value: "$1.5M" },
-        { term: "Pre-Money Valuation", value: "$6M" },
-        { term: "Post-Money Valuation", value: "$7.5M" },
-        { term: "Price Per Share", value: "$0.75" },
-        { term: "Option Pool", value: "15% post-financing" },
-        { term: "Anti-dilution", value: "Broad-based weighted average" },
-        { term: "Dividend", value: "8% non-cumulative" } // Intentionally different to show comparison
-      ]
-    },
-    {
-      id: "4",
-      name: "Convertible Note.pdf",
-      uploadDate: "2023-11-20T16:20:00Z",
-      status: "error",
-      extractedText: "CONVERTIBLE NOTE\n\nIssuer: DataFlow Systems Inc.\nDate: November 15, 2023\n\nPrincipal Amount: $750,000\nInterest Rate: 5% simple interest\nMaturity Date: November 15, 2025\n\nConversion Discount: 25%\nValuation Cap: $8M\nQualified Financing Threshold: $2M\n\nPrepayment: Not permitted without investor consent\nSecurity: Unsecured obligation\nSubordination: Junior to all indebtedness for borrowed money",
-      highlightedTerms: [
-        { term: "Principal Amount", value: "$750,000", position: { start: 88, end: 96 } },
-        { term: "Interest Rate", value: "5% simple interest", position: { start: 110, end: 127 } },
-        { term: "Maturity Date", value: "November 15, 2025", position: { start: 142, end: 159 } },
-        { term: "Conversion Discount", value: "25%", position: { start: 180, end: 183 } },
-        { term: "Valuation Cap", value: "$8M", position: { start: 197, end: 200 } }
-      ],
-      expectedTerms: [
-        { term: "Principal Amount", value: "$800,000" }, // Intentionally different to show comparison
-        { term: "Interest Rate", value: "5% simple interest" },
-        { term: "Maturity Date", value: "November 15, 2025" },
-        { term: "Conversion Discount", value: "25%" },
-        { term: "Valuation Cap", value: "$8M" },
-        { term: "Qualified Financing Threshold", value: "$2M" }
-      ]
-    },
-    {
-      id: "5",
-      name: "Series A Financing.pdf",
-      uploadDate: "2024-01-15T11:00:00Z",
-      status: "validated",
-      extractedText: "SERIES A PREFERRED STOCK PURCHASE AGREEMENT\n\nCompany: Quantum Solutions Ltd.\nLead Investor: Growth Capital Partners\n\nAmount Raised: $7M\nPre-Money Valuation: $18M\nPost-Money Valuation: $25M\nPer Share Purchase Price: $2.50\n\nLiquidation Preference: 1x participating with cap at 2x\nDividends: 8% cumulative\nProtective Provisions: Standard Series A protective provisions\nRedemption Rights: At investor option after 5 years\n\nBoard Composition: 5 members (2 common, 2 Series A, 1 independent)",
-      highlightedTerms: [
-        { term: "Amount Raised", value: "$7M", position: { start: 121, end: 124 } },
-        { term: "Pre-Money Valuation", value: "$18M", position: { start: 144, end: 148 } },
-        { term: "Post-Money Valuation", value: "$25M", position: { start: 172, end: 176 } },
-        { term: "Per Share Purchase Price", value: "$2.50", position: { start: 203, end: 208 } },
-        { term: "Liquidation Preference", value: "1x participating with cap at 2x", position: { start: 230, end: 261 } },
-        { term: "Dividends", value: "8% cumulative", position: { start: 273, end: 286 } },
-        { term: "Board Composition", value: "5 members (2 common, 2 Series A, 1 independent)", position: { start: 381, end: 425 } }
-      ],
-      expectedTerms: [
-        { term: "Amount Raised", value: "$7M" },
-        { term: "Pre-Money Valuation", value: "$20M" }, // Intentionally different to show comparison
-        { term: "Post-Money Valuation", value: "$25M" },
-        { term: "Per Share Purchase Price", value: "$2.50" },
-        { term: "Liquidation Preference", value: "1x participating with cap at 2x" },
-        { term: "Dividends", value: "8% cumulative" },
-        { term: "Board Composition", value: "5 members (2 common, 2 Series A, 1 independent)" }
-      ]
-    },
-    {
-      id: "6",
-      name: "Bridge Financing Agreement.docx",
-      uploadDate: "2024-02-28T13:40:00Z",
-      status: "processing",
-      extractedText: "BRIDGE FINANCING AGREEMENT\n\nCompany: InnoTech Ventures\nDate: February 25, 2024\n\nBridge Amount: $1.2M\nInterest Rate: 7% per annum\nMaturity: 12 months from closing\n\nAutomatic Conversion: Next equity financing of at least $3M\nConversion Discount: 20%\nValuation Cap: $12M\n\nMost Favored Nation: Yes\nWarrants: 10% coverage\nFee: 1% closing fee",
-      highlightedTerms: [
-        { term: "Bridge Amount", value: "$1.2M", position: { start: 94, end: 99 } },
-        { term: "Interest Rate", value: "7% per annum", position: { start: 113, end: 126 } },
-        { term: "Maturity", value: "12 months from closing", position: { start: 136, end: 158 } },
-        { term: "Conversion Discount", value: "20%", position: { start: 210, end: 213 } },
-        { term: "Valuation Cap", value: "$12M", position: { start: 228, end: 232 } },
-        { term: "Warrants", value: "10% coverage", position: { start: 257, end: 269 } }
-      ],
-      expectedTerms: [
-        { term: "Bridge Amount", value: "$1.2M" },
-        { term: "Interest Rate", value: "7% per annum" },
-        { term: "Maturity", value: "12 months from closing" },
-        { term: "Conversion Discount", value: "20%" },
-        { term: "Valuation Cap", value: "$12M" },
-        { term: "Warrants", value: "10% coverage" },
-        { term: "Fee", value: "2% closing fee" } // Intentionally different to show comparison
-      ]
-    },
-    {
-      id: "7",
-      name: "SAFE Agreement.pdf",
-      uploadDate: "2024-03-25T10:10:00Z",
-      status: "pending",
-      extractedText: "SIMPLE AGREEMENT FOR FUTURE EQUITY (SAFE)\n\nCompany: NextGen Software Inc.\nInvestor: Horizon Ventures LLC\nDate: March 20, 2024\n\nPurchase Amount: $500,000\nValuation Cap: $6M\nDiscount Rate: 15%\n\nPro Rata Rights: Yes\nTermination: 18 months if no equity financing\nGoverning Law: California",
-      highlightedTerms: [
-        { term: "Purchase Amount", value: "$500,000", position: { start: 136, end: 144 } },
-        { term: "Valuation Cap", value: "$6M", position: { start: 158, end: 161 } },
-        { term: "Discount Rate", value: "15%", position: { start: 176, end: 179 } },
-        { term: "Pro Rata Rights", value: "Yes", position: { start: 196, end: 199 } },
-        { term: "Termination", value: "18 months if no equity financing", position: { start: 210, end: 240 } }
-      ],
-      expectedTerms: [
-        { term: "Purchase Amount", value: "$500,000" },
-        { term: "Valuation Cap", value: "$6M" },
-        { term: "Discount Rate", value: "15%" },
-        { term: "Pro Rata Rights", value: "Yes" },
-        { term: "Termination", value: "18 months if no equity financing" },
-        { term: "Most Favored Nation", value: "Yes" } // Term that wasn't found but was expected
-      ]
-    }
-  ];
-
-
+const statusConfig = {
+  validated: {
+    icon: <CheckCircle2 className="h-4 w-4" />,
+    color: "bg-green-500/10 text-green-500 border-green-500/20",
+    label: "VALIDATED"
+  },
+  processing: {
+    icon: <Loader2 className="h-4 w-4 animate-spin" />,
+    color: "bg-white/5 text-white/60 border-white/10",
+    label: "PROCESSING"
+  },
+  error: {
+    icon: <AlertCircle className="h-4 w-4" />,
+    color: "bg-red-500/10 text-red-500 border-red-500/20",
+    label: "CRITICAL"
+  },
+  pending: {
+    icon: <Clock className="h-4 w-4" />,
+    color: "bg-white/10 text-white/40 border-white/10",
+    label: "PENDING"
+  }
+};
 
 function Alldocs() {
-    const [selectedDocument, setSelectedDocument] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-  
-    const filteredDocuments = mockDocuments
-      .filter(doc => (statusFilter ? doc.status === statusFilter : true))
-      .filter(doc => doc.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  
-    return (
-      <div>
-        {!selectedDocument && (
-          <div className="mt-6">
-            <div className="mb-4 flex space-x-4 mx-2">
-              <div>
-                <label htmlFor="searchQuery" className="mr-2 font-semibold">Search by Name:</label>
-                <input
-                  id="searchQuery"
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="border rounded px-2 py-1 text-black"
-                  placeholder="Enter document name"
-                />
-              </div>
-              <div >
-                <label htmlFor="statusFilter" className="mr-2 font-semibold">Filter by Status:</label>
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { data: documents = [], isLoading, refetch } = useQuery({
+    queryKey: ['termsheets'],
+    queryFn: () => api.getTermsheets(),
+    refetchInterval: 5000, // Poll every 5s to show processing updates
+  });
+
+  const filteredDocuments = documents
+    .filter((doc: any) => (statusFilter ? doc.status === statusFilter : true))
+    .filter((doc: any) => doc.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  return (
+    <div className="space-y-12">
+      {!selectedDocument ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-12"
+        >
+          {/* Action Bar */}
+          <div className="flex flex-col md:flex-row gap-6 items-center justify-between p-2 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl">
+            <div className="relative w-full md:w-full group px-2">
+              <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-white transition-colors" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent border-none pl-12 pr-6 py-4 text-sm focus:outline-none transition-all placeholder:text-white/20 text-white"
+                placeholder="Query repository index..."
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pr-2">
+              <div className="relative">
+                <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
                 <select
-                  id="statusFilter"
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value)}
-                  className="border rounded px-2 py-1 text-black"
+                  className="appearance-none bg-white/5 border border-white/10 rounded-2xl pl-12 pr-12 py-3 text-xs font-semibold uppercase tracking-widest focus:border-white/20 focus:outline-none transition-all cursor-pointer hover:bg-white/10 text-white"
                 >
-                  <option value="">All</option>
-                  <option value="pending">Pending</option>
-                  <option value="validated">Validated</option>
-                  <option value="error">Error</option>
+                  <option value="" className="bg-zinc-900">ALL STATUS</option>
+                  <option value="pending" className="bg-zinc-900">PENDING</option>
+                  <option value="validated" className="bg-zinc-900">VALIDATED</option>
+                  <option value="processing" className="bg-zinc-900">PROCESSING</option>
+                  <option value="error" className="bg-zinc-900">ERROR</option>
                 </select>
+                <ChevronRight className="absolute right-4 top-1/2 transform -translate-y-1/2 rotate-90 h-4 w-4 text-white/40 pointer-events-none" />
               </div>
             </div>
-            <div className="flex font-semibold border-b py-2">
-              <div className="w-1/3 px-3">Document Name</div>
-              <div className="w-1/4 px-3">Upload Date</div>
-              <div className="w-1/4 px-3">Status</div>
-              <div className="w-1/4 px-3"></div>
-            </div>
-
-            {filteredDocuments.map((doc) => (
-              <div
-                key={doc.id}
-                className="flex items-center border-b py-2"
-              >
-                <div className="w-1/3 px-3 text-lg font-medium">{doc.name}</div>
-                <div className="w-1/4 px-3">{new Date(doc.uploadDate).toLocaleDateString()}</div>
-                <div className="w-1/4 px-3 capitalize">{doc.status}</div>
-                <div className="w-1/4 px-3 capitalize">
-                  <Button onClick={() => setSelectedDocument(doc)}>
-                    View
-                  </Button>
-                </div>
-              </div>
-            ))}
           </div>
-        )}
-  
-        {selectedDocument && <DocumentViewer document={selectedDocument} />}
-      </div>
-    );
-  }
-  
-  export default Alldocs;
-  
-/*
 
+          {/* Registry Table UI */}
+          <div className="space-y-4">
+            <div className="flex items-center px-10 text-[10px] font-bold uppercase tracking-widest text-white/20">
+              <div className="w-2/5 flex items-center gap-2">Asset Identity <ArrowUpDown size={12} /></div>
+              <div className="w-1/5">Timeline</div>
+              <div className="w-1/5">Metric Status</div>
+              <div className="w-1/5 text-right">Interaction</div>
+            </div>
 
-*/
+            <AnimatePresence mode="popLayout">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center p-20 space-y-4">
+                  <Loader2 className="h-8 w-8 text-white/20 animate-spin" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/20">Syncing with registry...</p>
+                </div>
+              ) : filteredDocuments.map((doc, idx) => (
+                <motion.div
+                  key={doc.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="group relative"
+                  onClick={() => setSelectedDocument(doc)}
+                >
+                  <div className="flex items-center px-8 py-6 rounded-[2rem] bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] hover:border-white/10 transition-all cursor-pointer">
+                    <div className="w-2/5 flex items-center gap-6">
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-all">
+                        <FileText className="h-6 w-6 text-white/60" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-semibold text-white tracking-tight">{doc.name}</span>
+                        <span className="text-[10px] font-medium text-white/20 uppercase tracking-widest">{doc.size ? `${(doc.size / 1024).toFixed(1)} KB` : "Artifact"}</span>
+                      </div>
+                    </div>
+
+                    <div className="w-1/5">
+                      <span className="text-xs font-medium text-white/40 group-hover:text-white/60 transition-colors">
+                        {new Date(doc.uploadDate || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+
+                    <div className="w-1/5">
+                      <div className={cn(
+                        "inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all",
+                        statusConfig[doc.status as keyof typeof statusConfig]?.color
+                      )}>
+                        {statusConfig[doc.status as keyof typeof statusConfig]?.icon}
+                        {statusConfig[doc.status as keyof typeof statusConfig]?.label}
+                      </div>
+                    </div>
+
+                    <div className="w-1/5 flex justify-end gap-3">
+                      <button className="h-10 w-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all">
+                        <ExternalLink className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {!isLoading && filteredDocuments.length === 0 && (
+              <div className="p-20 text-center rounded-[3rem] bg-white/[0.01] border border-dashed border-white/10">
+                <p className="text-white/20 font-medium uppercase tracking-widest text-xs">No matching artifacts found in registry</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="space-y-12"
+        >
+          <button
+            onClick={() => setSelectedDocument(null)}
+            className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all font-semibold text-sm"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            <span>Back to repository index</span>
+          </button>
+          <div className="sleek-card p-1">
+            <DocumentViewer document={selectedDocument} />
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+export default Alldocs;
