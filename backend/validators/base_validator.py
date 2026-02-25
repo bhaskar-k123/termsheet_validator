@@ -9,13 +9,16 @@ swap_validator, amortised_swaps, and cross_currency modules.
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import pandas as pd
 
 from config import RISK_FILE, get_logger
 
 logger = get_logger(__name__)
+
+# Cached DataFrames keyed by (risk_file, sheet_name) → (mtime, DataFrame)
+_risk_cache: Dict[Tuple[str, str], Tuple[float, "pd.DataFrame"]] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -60,10 +63,8 @@ def load_reference_swap(
         logger.warning("Risk file not found: %s", risk_file)
         return None
 
-    try:
-        df = pd.read_excel(risk_file, sheet_name=sheet_name)
-    except Exception:
-        logger.exception("Error reading risk file %s (sheet=%s)", risk_file, sheet_name)
+    df = _read_risk_sheet(risk_file, sheet_name)
+    if df is None:
         return None
 
     # Locate the trade-ID column (case-insensitive)
@@ -96,6 +97,31 @@ def _find_trade_id_column(df: pd.DataFrame) -> Optional[str]:
         if "trade" in col.lower() and "id" in col.lower():
             return col
     return None
+
+
+def _read_risk_sheet(risk_file: str, sheet_name: str) -> Optional["pd.DataFrame"]:
+    """Read *sheet_name* from the risk Excel file, caching by file mtime."""
+    cache_key = (risk_file, sheet_name)
+    try:
+        current_mtime = os.path.getmtime(risk_file)
+    except OSError:
+        logger.warning("Cannot stat risk file: %s", risk_file)
+        return None
+
+    cached = _risk_cache.get(cache_key)
+    if cached is not None and cached[0] == current_mtime:
+        logger.debug("Using cached risk sheet %s/%s", risk_file, sheet_name)
+        return cached[1]
+
+    try:
+        df = pd.read_excel(risk_file, sheet_name=sheet_name)
+    except Exception:
+        logger.exception("Error reading risk file %s (sheet=%s)", risk_file, sheet_name)
+        return None
+
+    _risk_cache[cache_key] = (current_mtime, df)
+    logger.debug("Cached risk sheet %s/%s (mtime=%.2f)", risk_file, sheet_name, current_mtime)
+    return df
 
 
 # ---------------------------------------------------------------------------
